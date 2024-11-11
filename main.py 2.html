@@ -1,0 +1,93 @@
+<html>
+<head>
+<title>main.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #7a7e85;}
+.s4 { color: #2aacb8;}
+.s5 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+main.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">networkx </span><span class="s0">as </span><span class="s1">nx</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">matplotlib</span><span class="s2">.</span><span class="s1">pyplot </span><span class="s0">as </span><span class="s1">plt</span>
+
+<span class="s3"># Set the seed for reproducibility</span>
+<span class="s1">seed </span><span class="s2">= </span><span class="s4">4</span>
+<span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">seed</span><span class="s2">(</span><span class="s1">seed</span><span class="s2">)</span>
+
+<span class="s3"># Parameters</span>
+<span class="s1">num_nodes </span><span class="s2">= </span><span class="s4">90</span>
+<span class="s1">group_size </span><span class="s2">= </span><span class="s1">num_nodes </span><span class="s2">// </span><span class="s4">3</span>
+
+
+<span class="s1">prob_matrix </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span>
+    <span class="s2">[</span><span class="s4">0.3</span><span class="s2">, </span><span class="s4">0.05</span><span class="s2">, </span><span class="s4">0.02</span><span class="s2">],  </span><span class="s3"># Group 1 to Group 1, Group 1 to Group 2, Group 1 to Group 3</span>
+    <span class="s2">[</span><span class="s4">0.05</span><span class="s2">, </span><span class="s4">0.3</span><span class="s2">, </span><span class="s4">0.05</span><span class="s2">],  </span><span class="s3"># Group 2 to Group 1, Group 2 to Group 2, Group 2 to Group 3</span>
+    <span class="s2">[</span><span class="s4">0.02</span><span class="s2">, </span><span class="s4">0.05</span><span class="s2">, </span><span class="s4">0.3</span><span class="s2">],  </span><span class="s3"># Group 3 to Group 1, Group 3 to Group 2, Group 3 to Group 3</span>
+<span class="s2">])</span>
+
+<span class="s3"># Create a block diagonal matrix (clustered probability matrix)</span>
+<span class="s3"># This matrix will define the probability of edges between the groups</span>
+<span class="s1">adj_matrix </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s1">num_nodes</span><span class="s2">, </span><span class="s1">num_nodes</span><span class="s2">))</span>
+
+<span class="s3"># Create groups</span>
+<span class="s1">group_1 </span><span class="s2">= </span><span class="s1">range</span><span class="s2">(</span><span class="s4">0</span><span class="s2">, </span><span class="s1">group_size</span><span class="s2">)</span>
+<span class="s1">group_2 </span><span class="s2">= </span><span class="s1">range</span><span class="s2">(</span><span class="s1">group_size</span><span class="s2">, </span><span class="s4">2 </span><span class="s2">* </span><span class="s1">group_size</span><span class="s2">)</span>
+<span class="s1">group_3 </span><span class="s2">= </span><span class="s1">range</span><span class="s2">(</span><span class="s4">2 </span><span class="s2">* </span><span class="s1">group_size</span><span class="s2">, </span><span class="s1">num_nodes</span><span class="s2">)</span>
+
+<span class="s3"># Define edges based on probability matrix</span>
+<span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">num_nodes</span><span class="s2">):</span>
+    <span class="s0">for </span><span class="s1">j </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">i </span><span class="s2">+ </span><span class="s4">1</span><span class="s2">, </span><span class="s1">num_nodes</span><span class="s2">):  </span><span class="s3"># Ensure no self-loop and undirected graph</span>
+        <span class="s0">if </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_1 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_1</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">0</span><span class="s2">, </span><span class="s4">0</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_1 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_2</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">0</span><span class="s2">, </span><span class="s4">1</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_1 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_3</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">0</span><span class="s2">, </span><span class="s4">2</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_2 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_1</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">1</span><span class="s2">, </span><span class="s4">0</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_2 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_2</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">1</span><span class="s2">, </span><span class="s4">1</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_2 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_3</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">1</span><span class="s2">, </span><span class="s4">2</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_3 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_1</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">2</span><span class="s2">, </span><span class="s4">0</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_3 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_2</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">2</span><span class="s2">, </span><span class="s4">1</span><span class="s2">]</span>
+        <span class="s0">elif </span><span class="s1">i </span><span class="s0">in </span><span class="s1">group_3 </span><span class="s0">and </span><span class="s1">j </span><span class="s0">in </span><span class="s1">group_3</span><span class="s2">:</span>
+            <span class="s1">prob </span><span class="s2">= </span><span class="s1">prob_matrix</span><span class="s2">[</span><span class="s4">2</span><span class="s2">, </span><span class="s4">2</span><span class="s2">]</span>
+
+        <span class="s3"># Add edge with probability</span>
+        <span class="s0">if </span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">rand</span><span class="s2">() &lt; </span><span class="s1">prob</span><span class="s2">:</span>
+            <span class="s1">adj_matrix</span><span class="s2">[</span><span class="s1">i</span><span class="s2">, </span><span class="s1">j</span><span class="s2">] = </span><span class="s4">1</span>
+            <span class="s1">adj_matrix</span><span class="s2">[</span><span class="s1">j</span><span class="s2">, </span><span class="s1">i</span><span class="s2">] = </span><span class="s4">1  </span><span class="s3"># Undirected edge</span>
+
+<span class="s3"># Create a graph from the adjacency matrix</span>
+<span class="s1">G </span><span class="s2">= </span><span class="s1">nx</span><span class="s2">.</span><span class="s1">from_numpy_array</span><span class="s2">(</span><span class="s1">adj_matrix</span><span class="s2">)</span>
+
+<span class="s3"># Print the number of nodes and edges</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s5">f&quot;Number of nodes in the graph: </span><span class="s0">{</span><span class="s1">G</span><span class="s2">.</span><span class="s1">number_of_nodes</span><span class="s2">()</span><span class="s0">}</span><span class="s5">&quot;</span><span class="s2">)</span>
+<span class="s1">print</span><span class="s2">(</span><span class="s5">f&quot;Number of edges in the graph: </span><span class="s0">{</span><span class="s1">G</span><span class="s2">.</span><span class="s1">number_of_edges</span><span class="s2">()</span><span class="s0">}</span><span class="s5">&quot;</span><span class="s2">)</span>
+
+<span class="s3"># Draw the network with nodes colored by their group</span>
+<span class="s1">node_colors </span><span class="s2">= [</span><span class="s5">'red'</span><span class="s2">] * </span><span class="s1">group_size </span><span class="s2">+ [</span><span class="s5">'blue'</span><span class="s2">] * </span><span class="s1">group_size </span><span class="s2">+ [</span><span class="s5">'green'</span><span class="s2">] * </span><span class="s1">group_size</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">figure</span><span class="s2">(</span><span class="s1">figsize</span><span class="s2">=(</span><span class="s4">10</span><span class="s2">, </span><span class="s4">8</span><span class="s2">))</span>
+
+<span class="s3"># Set a seed for the layout to ensure reproducibility of node positioning</span>
+<span class="s1">pos </span><span class="s2">= </span><span class="s1">nx</span><span class="s2">.</span><span class="s1">spring_layout</span><span class="s2">(</span><span class="s1">G</span><span class="s2">, </span><span class="s1">seed</span><span class="s2">=</span><span class="s1">seed</span><span class="s2">)  </span><span class="s3"># Layout for visualization with a fixed seed</span>
+<span class="s1">nx</span><span class="s2">.</span><span class="s1">draw</span><span class="s2">(</span><span class="s1">G</span><span class="s2">, </span><span class="s1">pos</span><span class="s2">, </span><span class="s1">with_labels</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">node_size</span><span class="s2">=</span><span class="s4">500</span><span class="s2">, </span><span class="s1">node_color</span><span class="s2">=</span><span class="s1">node_colors</span><span class="s2">, </span><span class="s1">font_size</span><span class="s2">=</span><span class="s4">10</span><span class="s2">, </span><span class="s1">font_color</span><span class="s2">=</span><span class="s5">&quot;white&quot;</span><span class="s2">)</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">title</span><span class="s2">(</span><span class="s5">&quot;Network with 3 Clustered Groups&quot;</span><span class="s2">)</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">show</span><span class="s2">()</span>
+</pre>
+</body>
+</html>
