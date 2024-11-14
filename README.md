@@ -6,6 +6,7 @@ The page provides code for Implementing UASE, Omnibus Embedding, and SBM Figure 
 The  code was taken from the source below with minor         
 adjustments to fit this context:                                       
 code source: https://github.com/iggallagher/Dynamic-Network-Embedding/blob/main/Embedding%20Comparison.ipynb
+
 Original authors: Andrew Jones, Ian Gallagher                          
 
 
