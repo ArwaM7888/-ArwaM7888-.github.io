@@ -1,0 +1,204 @@
+<html>
+<head>
+<title>main.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+main.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">scipy</span><span class="s2">.</span><span class="s1">stats </span><span class="s0">as </span><span class="s1">stats</span>
+<span class="s0">import </span><span class="s1">matplotlib </span><span class="s0">as </span><span class="s1">mpl</span>
+<span class="s0">import </span><span class="s1">matplotlib</span><span class="s2">.</span><span class="s1">pyplot </span><span class="s0">as </span><span class="s1">plt</span>
+
+<span class="s3">&quot;&quot;&quot; 
+########################################################################## 
+#                                                                        # 
+The following code were taken from the source below with minor           # 
+# adjustments to fit this context:                                       #   
+#                                                                        # 
+# code source: https://github.com/iggallagher/Dynamic-Network-Embedding/blob/main/Embedding%20Comparison.ipynb 
+# Original authors: Andrew Jones, Ian Gallagher                          # 
+########################################################################## 
+&quot;&quot;&quot;</span>
+
+<span class="s4">##############################################################################</span>
+    <span class="s4">#   Defining functions that will be used in later computations      #</span>
+<span class="s4">##############################################################################</span>
+
+
+<span class="s0">def </span><span class="s1">symmetrises</span><span class="s2">(</span><span class="s1">A</span><span class="s2">, </span><span class="s1">diag</span><span class="s2">=</span><span class="s0">False</span><span class="s2">):</span>
+    <span class="s0">if </span><span class="s1">diag</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">np</span><span class="s2">.</span><span class="s1">tril</span><span class="s2">(</span><span class="s1">A</span><span class="s2">,</span><span class="s5">0</span><span class="s2">) + </span><span class="s1">np</span><span class="s2">.</span><span class="s1">transpose</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">tril</span><span class="s2">(</span><span class="s1">A</span><span class="s2">,-</span><span class="s5">1</span><span class="s2">))</span>
+    <span class="s0">else</span><span class="s2">:</span>
+        <span class="s0">return </span><span class="s1">np</span><span class="s2">.</span><span class="s1">tril</span><span class="s2">(</span><span class="s1">A</span><span class="s2">,-</span><span class="s5">1</span><span class="s2">) + </span><span class="s1">np</span><span class="s2">.</span><span class="s1">transpose</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">tril</span><span class="s2">(</span><span class="s1">A</span><span class="s2">,-</span><span class="s5">1</span><span class="s2">))</span>
+
+<span class="s0">def </span><span class="s1">gaussian_ellipse</span><span class="s2">(</span><span class="s1">mean</span><span class="s2">, </span><span class="s1">cov</span><span class="s2">):</span>
+    <span class="s0">if </span><span class="s1">mean</span><span class="s2">.</span><span class="s1">shape </span><span class="s2">== (</span><span class="s5">1</span><span class="s2">, </span><span class="s5">2</span><span class="s2">):</span>
+        <span class="s1">mean </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s1">mean</span><span class="s2">)[</span><span class="s5">0</span><span class="s2">]</span>
+    <span class="s1">v</span><span class="s2">, </span><span class="s1">w </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">linalg</span><span class="s2">.</span><span class="s1">eigh</span><span class="s2">(</span><span class="s1">cov</span><span class="s2">)</span>
+    <span class="s1">u </span><span class="s2">= </span><span class="s1">w</span><span class="s2">[</span><span class="s5">0</span><span class="s2">] / </span><span class="s1">np</span><span class="s2">.</span><span class="s1">linalg</span><span class="s2">.</span><span class="s1">norm</span><span class="s2">(</span><span class="s1">w</span><span class="s2">[</span><span class="s5">0</span><span class="s2">])</span>
+    <span class="s1">rtheta </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">arctan2</span><span class="s2">(</span><span class="s1">u</span><span class="s2">[</span><span class="s5">1</span><span class="s2">], </span><span class="s1">u</span><span class="s2">[</span><span class="s5">0</span><span class="s2">])</span>
+    <span class="s1">v </span><span class="s2">= </span><span class="s5">3. </span><span class="s2">* </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sqrt</span><span class="s2">(</span><span class="s5">2.</span><span class="s2">) * </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sqrt</span><span class="s2">(</span><span class="s1">v</span><span class="s2">)</span>
+    <span class="s1">width </span><span class="s2">= </span><span class="s1">v</span><span class="s2">[</span><span class="s5">0</span><span class="s2">]</span><span class="s1">; height </span><span class="s2">= </span><span class="s1">v</span><span class="s2">[</span><span class="s5">1</span><span class="s2">]</span>
+
+    <span class="s1">R </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span>
+        <span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">cos</span><span class="s2">(</span><span class="s1">rtheta</span><span class="s2">), -</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s1">rtheta</span><span class="s2">)],</span>
+        <span class="s2">[</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s1">rtheta</span><span class="s2">), </span><span class="s1">np</span><span class="s2">.</span><span class="s1">cos</span><span class="s2">(</span><span class="s1">rtheta</span><span class="s2">)],</span>
+    <span class="s2">])</span>
+    <span class="s1">theta </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">deg2rad</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">arange</span><span class="s2">(</span><span class="s5">0.0</span><span class="s2">, </span><span class="s5">360.0</span><span class="s2">, </span><span class="s5">1.0</span><span class="s2">))</span>
+    <span class="s1">x </span><span class="s2">= </span><span class="s5">0.5 </span><span class="s2">* </span><span class="s1">width </span><span class="s2">* </span><span class="s1">np</span><span class="s2">.</span><span class="s1">cos</span><span class="s2">(</span><span class="s1">theta</span><span class="s2">)</span>
+    <span class="s1">y </span><span class="s2">= </span><span class="s5">0.5 </span><span class="s2">* </span><span class="s1">height </span><span class="s2">* </span><span class="s1">np</span><span class="s2">.</span><span class="s1">sin</span><span class="s2">(</span><span class="s1">theta</span><span class="s2">)</span>
+    <span class="s1">x</span><span class="s2">, </span><span class="s1">y </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">dot</span><span class="s2">(</span><span class="s1">R</span><span class="s2">, </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">]))</span>
+    <span class="s1">x </span><span class="s2">+= </span><span class="s1">mean</span><span class="s2">[</span><span class="s5">0</span><span class="s2">]</span>
+    <span class="s1">y </span><span class="s2">+= </span><span class="s1">mean</span><span class="s2">[</span><span class="s5">1</span><span class="s2">]</span>
+
+    <span class="s0">return </span><span class="s2">[</span><span class="s1">x</span><span class="s2">, </span><span class="s1">y</span><span class="s2">]</span>
+
+<span class="s0">def </span><span class="s1">embed</span><span class="s2">(</span><span class="s1">A</span><span class="s2">, </span><span class="s1">K</span><span class="s2">):</span>
+    <span class="s1">UA</span><span class="s2">, </span><span class="s1">SA</span><span class="s2">, </span><span class="s1">VAt </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">linalg</span><span class="s2">.</span><span class="s1">svd</span><span class="s2">(</span><span class="s1">A</span><span class="s2">)</span>
+    <span class="s1">XA </span><span class="s2">= </span><span class="s1">UA</span><span class="s2">[:,</span><span class="s5">0</span><span class="s2">:</span><span class="s1">K</span><span class="s2">].</span><span class="s1">dot</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">diag</span><span class="s2">(</span><span class="s1">np</span><span class="s2">.</span><span class="s1">sqrt</span><span class="s2">(</span><span class="s1">SA</span><span class="s2">[</span><span class="s5">0</span><span class="s2">:</span><span class="s1">K</span><span class="s2">])))</span>
+    <span class="s0">return </span><span class="s1">XA</span>
+
+<span class="s0">def </span><span class="s1">omni_embed</span><span class="s2">(</span><span class="s1">As</span><span class="s2">, </span><span class="s1">K</span><span class="s2">):</span>
+    <span class="s4"># Construct omnibus matrices</span>
+    <span class="s1">T </span><span class="s2">= </span><span class="s1">len</span><span class="s2">(</span><span class="s1">As</span><span class="s2">)</span>
+    <span class="s1">A </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s1">T </span><span class="s2">* </span><span class="s1">n</span><span class="s2">, </span><span class="s1">T </span><span class="s2">* </span><span class="s1">n</span><span class="s2">))</span>
+
+    <span class="s0">for </span><span class="s1">t1 </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">T</span><span class="s2">):</span>
+        <span class="s0">for </span><span class="s1">t2 </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">T</span><span class="s2">):</span>
+            <span class="s0">if </span><span class="s1">t1 </span><span class="s2">== </span><span class="s1">t2</span><span class="s2">:</span>
+                <span class="s1">A</span><span class="s2">[</span><span class="s1">t1 </span><span class="s2">* </span><span class="s1">n</span><span class="s2">:(</span><span class="s1">t1 </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">) * </span><span class="s1">n</span><span class="s2">, </span><span class="s1">t1 </span><span class="s2">* </span><span class="s1">n</span><span class="s2">:(</span><span class="s1">t1 </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">) * </span><span class="s1">n</span><span class="s2">] = </span><span class="s1">As</span><span class="s2">[</span><span class="s1">t1</span><span class="s2">]</span>
+            <span class="s0">else</span><span class="s2">:</span>
+                <span class="s1">A</span><span class="s2">[</span><span class="s1">t1 </span><span class="s2">* </span><span class="s1">n</span><span class="s2">:(</span><span class="s1">t1 </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">) * </span><span class="s1">n</span><span class="s2">, </span><span class="s1">t2 </span><span class="s2">* </span><span class="s1">n</span><span class="s2">:(</span><span class="s1">t2 </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">) * </span><span class="s1">n</span><span class="s2">] = (</span><span class="s1">As</span><span class="s2">[</span><span class="s1">t1</span><span class="s2">] + </span><span class="s1">As</span><span class="s2">[</span><span class="s1">t2</span><span class="s2">]) / </span><span class="s5">2</span>
+
+    <span class="s1">XA </span><span class="s2">= </span><span class="s1">embed</span><span class="s2">(</span><span class="s1">A</span><span class="s2">, </span><span class="s1">K </span><span class="s2">* </span><span class="s1">T</span><span class="s2">)</span>
+    <span class="s1">XAs </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s1">T</span><span class="s2">, </span><span class="s1">n</span><span class="s2">, </span><span class="s1">K </span><span class="s2">* </span><span class="s1">T</span><span class="s2">))</span>
+    <span class="s0">for </span><span class="s1">t </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">T</span><span class="s2">):</span>
+        <span class="s1">XAs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">] = </span><span class="s1">XA</span><span class="s2">[</span><span class="s1">t </span><span class="s2">* </span><span class="s1">n</span><span class="s2">:(</span><span class="s1">t </span><span class="s2">+ </span><span class="s5">1</span><span class="s2">) * </span><span class="s1">n</span><span class="s2">]</span>
+
+    <span class="s0">return </span><span class="s1">XAs</span>
+
+<span class="s4">######################################################################################</span>
+ <span class="s4">#   Unfolded Adjacency Spectral Embedding  simulation using Stochastic Block Model  #</span>
+<span class="s4">#######################################################################################</span>
+
+<span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">seed</span><span class="s2">(</span><span class="s5">0</span><span class="s2">)</span>
+
+<span class="s1">K </span><span class="s2">= </span><span class="s5">3  </span><span class="s4"># Number of communities</span>
+<span class="s1">T </span><span class="s2">= </span><span class="s5">10 </span><span class="s4"># Number of time steps</span>
+<span class="s1">n </span><span class="s2">= </span><span class="s5">999  </span><span class="s4"># Number of nodes</span>
+
+<span class="s4"># Create community labels</span>
+<span class="s1">Z </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">repeat</span><span class="s2">(</span><span class="s1">range</span><span class="s2">(</span><span class="s1">K</span><span class="s2">), </span><span class="s1">n </span><span class="s2">// </span><span class="s1">K</span><span class="s2">)  </span><span class="s4"># Community labels</span>
+<span class="s1">colours </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">(</span><span class="s1">list</span><span class="s2">(</span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">colors</span><span class="s2">.</span><span class="s1">TABLEAU_COLORS</span><span class="s2">.</span><span class="s1">keys</span><span class="s2">())[</span><span class="s5">0</span><span class="s2">:</span><span class="s1">K</span><span class="s2">])</span>
+<span class="s1">Zcol </span><span class="s2">= </span><span class="s1">colours</span><span class="s2">[</span><span class="s1">Z</span><span class="s2">]  </span><span class="s4"># Assign colors based on community labels</span>
+
+<span class="s4"># Generate the stochastic block matrices before and after the drift</span>
+
+<span class="s1">B1 </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span>
+    <span class="s2">[</span><span class="s5">0.30</span><span class="s2">, </span><span class="s5">0.15</span><span class="s2">, </span><span class="s5">0.10</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s5">0.15</span><span class="s2">, </span><span class="s5">0.35</span><span class="s2">, </span><span class="s5">0.05</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s5">0.10</span><span class="s2">, </span><span class="s5">0.05</span><span class="s2">, </span><span class="s5">0.20</span><span class="s2">]</span>
+<span class="s2">])</span>
+
+
+<span class="s1">B2 </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">array</span><span class="s2">([</span>
+    <span class="s2">[</span><span class="s5">0.40</span><span class="s2">, </span><span class="s5">0.40</span><span class="s2">, </span><span class="s5">0.10</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s5">0.40</span><span class="s2">, </span><span class="s5">0.40</span><span class="s2">, </span><span class="s5">0.05</span><span class="s2">],</span>
+    <span class="s2">[</span><span class="s5">0.10</span><span class="s2">, </span><span class="s5">0.05</span><span class="s2">, </span><span class="s5">0.20</span><span class="s2">]</span>
+<span class="s2">])</span>
+
+
+<span class="s4"># Create a series of connectivity matrices</span>
+<span class="s1">Bs </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s1">T</span><span class="s2">, </span><span class="s1">K</span><span class="s2">, </span><span class="s1">K</span><span class="s2">))</span>
+
+<span class="s0">for </span><span class="s1">t </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s5">4</span><span class="s2">):</span>
+    <span class="s1">noise </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">normal</span><span class="s2">(</span><span class="s1">loc</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">scale</span><span class="s2">=</span><span class="s5">0.001</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">B1</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">)  </span><span class="s4"># Scale noise to be small</span>
+    <span class="s1">Bs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">]=</span><span class="s1">B1   </span><span class="s2">+ </span><span class="s1">noise</span>
+
+
+<span class="s4"># choosing matrix B(7) to be the matrix of drift</span>
+<span class="s0">for </span><span class="s1">t </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s5">4</span><span class="s2">,</span><span class="s5">8</span><span class="s2">):</span>
+
+     <span class="s1">noise </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">normal</span><span class="s2">(</span><span class="s1">loc</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">scale</span><span class="s2">=</span><span class="s5">0.001</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">B1</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">)  </span><span class="s4"># Scale noise to be small</span>
+     <span class="s1">Bs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">]=</span><span class="s1">B2  </span><span class="s2">+ </span><span class="s1">noise</span>
+
+<span class="s0">for </span><span class="s1">t </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s5">8</span><span class="s2">,</span><span class="s5">10</span><span class="s2">):</span>
+
+     <span class="s1">noise </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">random</span><span class="s2">.</span><span class="s1">normal</span><span class="s2">(</span><span class="s1">loc</span><span class="s2">=</span><span class="s5">0</span><span class="s2">, </span><span class="s1">scale</span><span class="s2">=</span><span class="s5">0.001</span><span class="s2">, </span><span class="s1">size</span><span class="s2">=</span><span class="s1">B1</span><span class="s2">.</span><span class="s1">shape</span><span class="s2">)  </span><span class="s4"># Scale noise to be small</span>
+     <span class="s1">Bs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">]=</span><span class="s1">B1 </span><span class="s2">+ </span><span class="s1">noise</span>
+
+
+<span class="s4"># Generate adjacency matrices</span>
+<span class="s1">As </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">zeros</span><span class="s2">((</span><span class="s1">T</span><span class="s2">, </span><span class="s1">n</span><span class="s2">, </span><span class="s1">n</span><span class="s2">))</span>
+<span class="s0">for </span><span class="s1">t </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">T</span><span class="s2">):</span>
+
+    <span class="s1">As</span><span class="s2">[</span><span class="s1">t</span><span class="s2">] = </span><span class="s1">symmetrises</span><span class="s2">(</span><span class="s1">stats</span><span class="s2">.</span><span class="s1">bernoulli</span><span class="s2">.</span><span class="s1">rvs</span><span class="s2">(</span><span class="s1">Bs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">][</span><span class="s1">Z</span><span class="s2">, :][:, </span><span class="s1">Z</span><span class="s2">]))</span>
+
+
+<span class="s1">YA_omni </span><span class="s2">= </span><span class="s1">omni_embed</span><span class="s2">(</span><span class="s1">As</span><span class="s2">, </span><span class="s1">K</span><span class="s2">)</span>
+
+<span class="s4">##########################################################################</span>
+                       <span class="s4">#   Improved Visualization  #</span>
+<span class="s4">##########################################################################</span>
+
+<span class="s1">fig</span><span class="s2">, </span><span class="s1">axs </span><span class="s2">= </span><span class="s1">plt</span><span class="s2">.</span><span class="s1">subplots</span><span class="s2">(</span><span class="s5">5</span><span class="s2">, </span><span class="s5">2</span><span class="s2">, </span><span class="s1">figsize</span><span class="s2">=(</span><span class="s5">8</span><span class="s2">, </span><span class="s5">8</span><span class="s2">), </span><span class="s1">sharex</span><span class="s2">=</span><span class="s0">True</span><span class="s2">, </span><span class="s1">sharey</span><span class="s2">=</span><span class="s0">True</span><span class="s2">)  </span><span class="s4"># 2 rows, 5 columns</span>
+<span class="s1">axs </span><span class="s2">= </span><span class="s1">axs</span><span class="s2">.</span><span class="s1">flatten</span><span class="s2">()  </span><span class="s4"># Flatten for easy indexing</span>
+
+<span class="s4"># Determine global x and y axis limits based on the data range across all time steps</span>
+<span class="s1">x_min</span><span class="s2">, </span><span class="s1">x_max </span><span class="s2">= </span><span class="s1">YA_omni</span><span class="s2">[:, :, </span><span class="s5">0</span><span class="s2">].</span><span class="s1">min</span><span class="s2">(), </span><span class="s1">YA_omni</span><span class="s2">[:, :, </span><span class="s5">0</span><span class="s2">].</span><span class="s1">max</span><span class="s2">()</span>
+<span class="s1">y_min</span><span class="s2">, </span><span class="s1">y_max </span><span class="s2">= </span><span class="s1">YA_omni</span><span class="s2">[:, :, </span><span class="s5">1</span><span class="s2">].</span><span class="s1">min</span><span class="s2">(), </span><span class="s1">YA_omni</span><span class="s2">[:, :, </span><span class="s5">1</span><span class="s2">].</span><span class="s1">max</span><span class="s2">()</span>
+
+<span class="s4"># Add a margin for better visualization</span>
+<span class="s1">x_margin </span><span class="s2">= (</span><span class="s1">x_max </span><span class="s2">- </span><span class="s1">x_min</span><span class="s2">) * </span><span class="s5">0.1</span>
+<span class="s1">y_margin </span><span class="s2">= (</span><span class="s1">y_max </span><span class="s2">- </span><span class="s1">y_min</span><span class="s2">) * </span><span class="s5">0.1</span>
+<span class="s1">x_min </span><span class="s2">-= </span><span class="s1">x_margin</span>
+<span class="s1">x_max </span><span class="s2">+= </span><span class="s1">x_margin</span>
+<span class="s1">y_min </span><span class="s2">-= </span><span class="s1">y_margin</span>
+<span class="s1">y_max </span><span class="s2">+= </span><span class="s1">y_margin</span>
+
+<span class="s0">for </span><span class="s1">t </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">T</span><span class="s2">):</span>
+    <span class="s1">axs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">].</span><span class="s1">grid</span><span class="s2">()</span>
+    <span class="s1">axs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">].</span><span class="s1">scatter</span><span class="s2">(</span><span class="s1">YA_omni</span><span class="s2">[</span><span class="s1">t</span><span class="s2">,:,</span><span class="s5">0</span><span class="s2">], </span><span class="s1">YA_omni</span><span class="s2">[</span><span class="s1">t</span><span class="s2">,:,</span><span class="s5">1</span><span class="s2">], </span><span class="s1">marker</span><span class="s2">=</span><span class="s3">'.'</span><span class="s2">, </span><span class="s1">s</span><span class="s2">=</span><span class="s5">5</span><span class="s2">, </span><span class="s1">c</span><span class="s2">=</span><span class="s1">Zcol</span><span class="s2">)</span>
+    <span class="s1">axs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">].</span><span class="s1">set_title</span><span class="s2">(</span><span class="s3">'Omnibus embedding, SBM ' </span><span class="s2">+ </span><span class="s1">str</span><span class="s2">(</span><span class="s1">t</span><span class="s2">+</span><span class="s5">1</span><span class="s2">))</span>
+
+
+<span class="s4"># Plot  clusters with ellipses</span>
+    <span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">K</span><span class="s2">):</span>
+        <span class="s1">mean </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">mean</span><span class="s2">(</span><span class="s1">YA_omni</span><span class="s2">[</span><span class="s1">t</span><span class="s2">, (</span><span class="s1">Z </span><span class="s2">== </span><span class="s1">k</span><span class="s2">)], </span><span class="s1">axis</span><span class="s2">=</span><span class="s5">0</span><span class="s2">)</span>
+        <span class="s1">cov </span><span class="s2">= </span><span class="s1">np</span><span class="s2">.</span><span class="s1">cov</span><span class="s2">(</span><span class="s1">YA_omni</span><span class="s2">[</span><span class="s1">t</span><span class="s2">, (</span><span class="s1">Z </span><span class="s2">== </span><span class="s1">k</span><span class="s2">)].</span><span class="s1">T</span><span class="s2">)</span>
+        <span class="s1">axs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">].</span><span class="s1">scatter</span><span class="s2">(</span><span class="s1">mean</span><span class="s2">[</span><span class="s5">0</span><span class="s2">], </span><span class="s1">mean</span><span class="s2">[</span><span class="s5">1</span><span class="s2">], </span><span class="s1">marker</span><span class="s2">=</span><span class="s3">'o'</span><span class="s2">, </span><span class="s1">s</span><span class="s2">=</span><span class="s5">10</span><span class="s2">, </span><span class="s1">c</span><span class="s2">=</span><span class="s3">'black'</span><span class="s2">)</span>
+        <span class="s1">ellipse </span><span class="s2">= </span><span class="s1">gaussian_ellipse</span><span class="s2">(</span><span class="s1">mean</span><span class="s2">[</span><span class="s5">0</span><span class="s2">:</span><span class="s5">2</span><span class="s2">], </span><span class="s1">cov</span><span class="s2">[</span><span class="s5">0</span><span class="s2">:</span><span class="s5">2</span><span class="s2">, </span><span class="s5">0</span><span class="s2">:</span><span class="s5">2</span><span class="s2">])</span>
+        <span class="s1">axs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">].</span><span class="s1">plot</span><span class="s2">(</span><span class="s1">ellipse</span><span class="s2">[</span><span class="s5">0</span><span class="s2">], </span><span class="s1">ellipse</span><span class="s2">[</span><span class="s5">1</span><span class="s2">], </span><span class="s3">'--'</span><span class="s2">, </span><span class="s1">color</span><span class="s2">=</span><span class="s3">'black'</span><span class="s2">)</span>
+
+    <span class="s1">axs</span><span class="s2">[</span><span class="s1">t</span><span class="s2">].</span><span class="s1">set_title</span><span class="s2">(</span><span class="s3">f'Time step </span><span class="s0">{</span><span class="s1">t </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">'</span><span class="s2">)  </span><span class="s4"># Set titles for each subplot</span>
+
+<span class="s4"># Create legend entries for communities</span>
+<span class="s1">community_labels </span><span class="s2">= [</span><span class="s3">f&quot;Group </span><span class="s0">{</span><span class="s1">k </span><span class="s2">+ </span><span class="s5">1</span><span class="s0">}</span><span class="s3">&quot; </span><span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">K</span><span class="s2">)]</span>
+<span class="s1">community_colors </span><span class="s2">= [</span><span class="s1">mpl</span><span class="s2">.</span><span class="s1">colors</span><span class="s2">.</span><span class="s1">TABLEAU_COLORS</span><span class="s2">[</span><span class="s1">colours</span><span class="s2">[</span><span class="s1">k</span><span class="s2">]] </span><span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">K</span><span class="s2">)]</span>
+
+<span class="s0">for </span><span class="s1">k </span><span class="s0">in </span><span class="s1">range</span><span class="s2">(</span><span class="s1">K</span><span class="s2">):</span>
+    <span class="s1">axs</span><span class="s2">[</span><span class="s5">0</span><span class="s2">].</span><span class="s1">scatter</span><span class="s2">([], [], </span><span class="s1">color</span><span class="s2">=</span><span class="s1">community_colors</span><span class="s2">[</span><span class="s1">k</span><span class="s2">], </span><span class="s1">label</span><span class="s2">=</span><span class="s1">community_labels</span><span class="s2">[</span><span class="s1">k</span><span class="s2">])</span>
+
+<span class="s4"># Add legend to the first subplot</span>
+<span class="s1">axs</span><span class="s2">[</span><span class="s5">0</span><span class="s2">].</span><span class="s1">legend</span><span class="s2">(</span><span class="s1">title</span><span class="s2">=</span><span class="s3">&quot;Groups&quot;</span><span class="s2">, </span><span class="s1">loc</span><span class="s2">=</span><span class="s3">&quot;upper left&quot;</span><span class="s2">, </span><span class="s1">bbox_to_anchor</span><span class="s2">=(</span><span class="s5">1.05</span><span class="s2">, </span><span class="s5">1</span><span class="s2">))</span>
+
+
+<span class="s1">fig</span><span class="s2">.</span><span class="s1">suptitle</span><span class="s2">(</span><span class="s3">&quot;OmniBus Embedding&quot;</span><span class="s2">, </span><span class="s1">fontsize</span><span class="s2">=</span><span class="s5">16</span><span class="s2">, </span><span class="s1">y</span><span class="s2">=</span><span class="s5">1.03</span><span class="s2">)</span>
+<span class="s1">plt</span><span class="s2">.</span><span class="s1">show</span><span class="s2">()</span>
+
+</pre>
+</body>
+</html>
